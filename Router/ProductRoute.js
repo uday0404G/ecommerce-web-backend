@@ -3,7 +3,7 @@ const productRouter = express.Router();
 const Product = require('../model/productmodel');
 const { auth, authorizeAdmin } = require('../middleware/auth');
 
-// Create product (admin only)
+
 productRouter.post('/', auth, authorizeAdmin, async (req, res) => {
     try {
         const { name, description, price, category, subCategory, stock } = req.body;

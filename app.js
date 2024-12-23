@@ -8,7 +8,9 @@ const subCategoryRouter = require('./Router/subcatagoryRoute')
 const app = express()
 require('dotenv').config()
 const port = process.env.port||3000
+const  cors=require("cors")
 
+app.use(cors())
 app.use(express.json())
 app.use('/user',userRouter)
 app.use('/product',productRouter)

@@ -4,9 +4,10 @@ const Product = require('../model/productmodel');
 const { auth, authorizeAdmin } = require('../middleware/auth');
 
 
-productRouter.post('/', auth, authorizeAdmin, async (req, res) => {
+productRouter.post('/p',  async (req, res) => {
     try {
         const { name, description, price, category, subCategory, stock } = req.body;
+     
         
         const product = new Product({
             name,
@@ -16,11 +17,13 @@ productRouter.post('/', auth, authorizeAdmin, async (req, res) => {
             subCategory,
             stock
         });
-
+    console.log(product);
+    
         await product.save();
-        res.status(201).json({ message: 'Product created successfully', product });
+
+        res.status(201).send({ message: 'Product created successfully', product });
     } catch (error) {
-        res.status(500).json({ message: 'Error creating product', error: error.message });
+        res.send(error)
     }
 });
 
@@ -35,9 +38,7 @@ productRouter.get('/', async (req, res) => {
         res.status(500).json({ message: 'Error fetching products', error: error.message });
     }
 });
-
-// Get single product
-productRouter.get('/:id', async (req, res) => {
+ productRouter.get('/:id', async (req, res) => {
     try {
         const product = await Product.findById(req.params.id)
             .populate('category')

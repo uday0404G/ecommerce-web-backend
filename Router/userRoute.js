@@ -63,6 +63,7 @@ userRouter.post('/register', async (req, res) => {
 userRouter.post('/login', async (req, res) => {
     try {
         const { email, password } = req.body;
+        console.log("Login attempt:", { email, password }); // Add this for debugging
         
         // Find user
         const user = await User.findOne({ email });
@@ -77,13 +78,29 @@ userRouter.post('/login', async (req, res) => {
 
         // Generate JWT token
         const token = jwt.sign(
-            { userId: user._id, email: user.email, role: user.role },'Uday',
+            { userId: user._id, email: user.email, role: user.role },
+            'Uday',
             { expiresIn: '24h' }
         );
 
-        res.status(200).json({message: 'Login successful', token,});
+        res.status(200).json({
+            status: "success",
+            message: 'Login successful',
+            token,
+            user: {
+                _id: user._id,
+                name: user.name,
+                email: user.email,
+                role: user.role
+            }
+        });
     } catch (error) {
-        res.status(500).json({ message: 'Error logging in', error: error.message });
+        console.error("Login error:", error);
+        res.status(500).json({ 
+            status: "error",
+            message: 'Error logging in', 
+            error: error.message 
+        });
     }
 });
 
@@ -114,6 +131,40 @@ userRouter.get('/check-role', auth, (req, res) => {
         });
     } catch (error) {
         res.status(500).json({ message: "Error checking role", error: error.message });
+    }
+});
+
+userRouter.put('/change-password', auth, async (req, res) => {
+    try {
+        const { currentPassword, secretKey, newPassword, verificationMethod } = req.body;
+        const user = await User.findById(req.user.userId);
+
+        // Verify based on chosen method
+        if (verificationMethod === 'current') {
+            // Verify current password
+            if (user.password !== currentPassword) {
+                return res.status(401).json({ message: 'Current password is incorrect' });
+            }
+        } else if (verificationMethod === 'secret') {
+            // Verify admin secret key
+            if (secretKey !== 'your-admin-secret-key') {
+                return res.status(401).json({ message: 'Invalid admin secret key' });
+            }
+        } else {
+            return res.status(400).json({ message: 'Invalid verification method' });
+        }
+
+        // Update password
+        user.password = newPassword;
+        await user.save();
+
+        res.status(200).json({ message: 'Password updated successfully' });
+    } catch (error) {
+        console.error("Change password error:", error);
+        res.status(500).json({ 
+            message: 'Failed to change password', 
+            error: error.message 
+        });
     }
 });
 
